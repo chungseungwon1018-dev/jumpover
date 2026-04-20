@@ -506,7 +506,7 @@ export default function HomeClient() {
       setPassword('')
       setSpot('')
       setInfoMessage('게시글이 등록되었습니다.')
-      mutate()
+      // mutate() 제거: 실시간 구독(INSERT)이 새 게시글을 추가하므로 중복 방지
     } catch (error: any) {
       setInfoMessage(error.message || '오류가 발생했습니다.')
     } finally {
@@ -844,28 +844,51 @@ export default function HomeClient() {
           {univError && <p className="mt-4 text-sm text-red-600">대학 정보를 불러오는 중 오류가 발생했습니다.</p>}
         </section>
 
-        <section className="mb-10 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">새 게시글 작성</h2>
-              <p className="mt-2 text-sm text-slate-500">텍스트 게시글을 작성하고 실시간으로 볼 수 있습니다.</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">유형</label>
-                <select
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
-                  value={type}
-                  onChange={(event) => setType(event.target.value as 'text' | 'image')}
-                >
-                  <option value="text">텍스트</option>
-                  <option value="image">이미지</option>
-                </select>
+        <section className="mb-10 rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 overflow-hidden">
+          {/* 섹션 헤더 */}
+          <div className="border-b border-slate-100 px-6 py-5">
+            <h2 className="text-xl font-semibold text-slate-900">새 게시글 작성</h2>
+            <p className="mt-1 text-sm text-slate-500">익명으로 담벼락에 메시지를 남겨보세요.</p>
+          </div>
+
+          {/* 옵션 설정 바 */}
+          <div className="border-b border-slate-100 bg-slate-50 px-6 py-4">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              {/* 유형 토글 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">유형</span>
+                <div className="flex rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setType('text')}
+                    className={
+                      'px-4 py-1.5 text-sm font-medium transition-colors ' +
+                      (type === 'text' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100')
+                    }
+                  >
+                    ✏️ 텍스트
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setType('image')}
+                    className={
+                      'px-4 py-1.5 text-sm font-medium transition-colors ' +
+                      (type === 'image' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100')
+                    }
+                  >
+                    🎨 그림
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">스팟</label>
+
+              {/* 구분선 */}
+              <div className="hidden sm:block h-6 w-px bg-slate-200" />
+
+              {/* 스팟 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">스팟</span>
                 <select
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm shadow-sm focus:outline-none"
                   value={spot}
                   onChange={(event) => setSpot(event.target.value)}
                   disabled={!selectedUniv}
@@ -874,170 +897,229 @@ export default function HomeClient() {
                   {selectedUniv && universities
                     .find((u: any) => u.id === selectedUniv)
                     ?.location?.map((location: string) => (
-                      <option key={location} value={location}>
-                        {location}
-                      </option>
+                      <option key={location} value={location}>{location}</option>
                     ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">만료 시간</label>
+
+              {/* 구분선 */}
+              <div className="hidden sm:block h-6 w-px bg-slate-200" />
+
+              {/* 만료 시간 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">만료</span>
                 <select
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm shadow-sm focus:outline-none"
                   value={expiryHour}
                   onChange={(event) => setExpiryHour(Number(event.target.value))}
                 >
                   {EXPIRY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </div>
-              <div className="sm:col-span-2 lg:col-span-1">
-                <label className="block text-sm font-medium text-slate-700">배경 색상</label>
-                <div className="mt-2 flex flex-wrap gap-2">
+
+              {/* 구분선 */}
+              <div className="hidden sm:block h-6 w-px bg-slate-200" />
+
+              {/* 배경 색상 */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">배경</span>
+                <div className="flex gap-1.5">
                   {BACKGROUND_COLORS.map((color) => (
                     <button
                       key={color.value}
                       type="button"
                       onClick={() => setBgColor(color.value)}
+                      title={color.label}
                       className={
-                        bgColor === color.value
-                          ? 'h-9 w-9 rounded-full border-2 transition border-slate-900'
-                          : 'h-9 w-9 rounded-full border-2 transition border-transparent'
+                        'h-7 w-7 rounded-full border-2 transition-transform hover:scale-110 ' +
+                        (bgColor === color.value ? 'border-slate-900 scale-110' : 'border-slate-200')
                       }
                       style={{ backgroundColor: color.value }}
                     />
                   ))}
                 </div>
               </div>
+
+              {/* 구분선 */}
+              {type === 'text' && <div className="hidden sm:block h-6 w-px bg-slate-200" />}
+
+              {/* 폰트 스타일 (텍스트 전용) */}
+              {type === 'text' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">폰트</span>
+                  <div className="flex rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    {FONT_STYLES.map((fs) => (
+                      <button
+                        key={fs.value}
+                        type="button"
+                        onClick={() => setFontStyle(fs.value)}
+                        className={
+                          'px-3 py-1.5 text-sm font-medium transition-colors ' +
+                          (fontStyle === fs.value ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100')
+                        }
+                      >
+                        {fs.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_0.6fr]">
-            <div>
-              {type === 'text' ? (
-                <>
-                  <label className="block text-sm font-medium text-slate-700">내용</label>
+          {/* 본문 작성 영역 */}
+          <div className="p-6">
+            <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+              {/* 콘텐츠 입력 */}
+              <div>
+                {type === 'text' ? (
                   <textarea
-                    className="mt-2 min-h-[160px] w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none"
+                    className={
+                      'min-h-[200px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-900 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition resize-none ' +
+                      (fontStyle === 'handwriting' ? 'font-handwriting' : 'font-gothic')
+                    }
                     value={content}
                     onChange={(event) => setContent(event.target.value)}
                     placeholder="익명으로 담벼락에 남길 내용을 적어보세요."
+                    style={{ backgroundColor: bgColor }}
                   />
-                </>
-              ) : (
-                <>
-                  <label className="block text-sm font-medium text-slate-700">그래피티 캔버스</label>
-                  <div className="mt-2 rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                    <div className="mb-3 flex flex-wrap items-center gap-3">
+                ) : (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 overflow-hidden shadow-sm">
+                    {/* 캔버스 도구 모음 */}
+                    <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <label className="text-sm text-slate-700">브러시</label>
+                        <span className="text-xs text-slate-500">브러시</span>
                         <input
                           type="range"
                           min={1}
                           max={20}
                           value={brushRadius}
                           onChange={(event) => setBrushRadius(Number(event.target.value))}
-                          className="h-2 w-32 cursor-pointer appearance-none rounded-full bg-slate-200"
+                          className="h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-slate-200"
                         />
-                        <span className="text-sm text-slate-500">{brushRadius}px</span>
+                        <span className="w-8 text-xs text-slate-500">{brushRadius}px</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <label className="text-sm text-slate-700">색상</label>
+                        <span className="text-xs text-slate-500">색상</span>
                         <input
                           type="color"
                           value={brushColor}
                           onChange={(event) => setBrushColor(event.target.value)}
-                          className="h-9 w-12 rounded-xl border border-slate-200 bg-white"
+                          className="h-7 w-10 cursor-pointer rounded-lg border border-slate-200"
                         />
                       </div>
-                      <button
-                        type="button"
-                        onClick={undoLine}
-                        className="rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
-                      >
-                        실행 취소
-                      </button>
-                      <button
-                        type="button"
-                        onClick={clearCanvas}
-                        className="rounded-2xl border border-red-300 bg-white px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
-                      >
-                        지우기
-                      </button>
+                      <div className="ml-auto flex gap-2">
+                        <button
+                          type="button"
+                          onClick={undoLine}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 transition hover:bg-slate-50"
+                        >
+                          ↩ 실행취소
+                        </button>
+                        <button
+                          type="button"
+                          onClick={clearCanvas}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-1 text-xs text-red-500 transition hover:bg-red-50"
+                        >
+                          🗑 전체지우기
+                        </button>
+                      </div>
                     </div>
                     <Stage
-  width={canvasWidth}
-  height={320}
-  ref={canvasRef}
-  style={{ background: bgColor }}
-  onMouseDown={handleMouseDown}
-  onMousemove={handleMouseMove}
-  onMouseup={handleMouseUp}
->
-  <Layer>
-    {/* 배경색은 style로만 적용, 실제 저장 시에만 bgRect 추가 */}
-    {lines.map((line, i) => (
-      <Line
-        key={i}
-        points={line.points}
-        stroke={line.color}
-        strokeWidth={line.width}
-        tension={0.5}
-        lineCap="round"
-        globalCompositeOperation={line.tool === 'eraser' ? 'destination-out' : 'source-over'}
-      />
-    ))}
-  </Layer>
-</Stage>
-                    <p className="mt-3 text-sm text-slate-500">그림을 그린 뒤 게시글을 등록하면 캔버피 이미지가 저장됩니다.</p>
+                      width={canvasWidth}
+                      height={320}
+                      ref={canvasRef}
+                      style={{ background: bgColor, display: 'block' }}
+                      onMouseDown={handleMouseDown}
+                      onMousemove={handleMouseMove}
+                      onMouseup={handleMouseUp}
+                    >
+                      <Layer>
+                        {lines.map((line, i) => (
+                          <Line
+                            key={i}
+                            points={line.points}
+                            stroke={line.color}
+                            strokeWidth={line.width}
+                            tension={0.5}
+                            lineCap="round"
+                            globalCompositeOperation={line.tool === 'eraser' ? 'destination-out' : 'source-over'}
+                          />
+                        ))}
+                      </Layer>
+                    </Stage>
+                    <p className="px-4 py-2 text-xs text-slate-400 bg-white border-t border-slate-100">
+                      그림을 그린 뒤 게시글을 등록하면 이미지가 저장됩니다.
+                    </p>
                   </div>
-                </>
-              )}
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">삭제 비밀번호</label>
-                <input
-                  type="password"
-                  className="mt-2 w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="4자리 이상 입력"
-                />
+                )}
               </div>
-              <div className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
-                <input
-                  type="checkbox"
-                  id="blur-toggle"
-                  className="h-4 w-4 rounded border-slate-300 cursor-pointer"
-                  checked={isBlur}
-                  onChange={(event) => setIsBlur(event.target.checked)}
-                />
-                <label htmlFor="blur-toggle" className="text-sm font-medium text-slate-700 cursor-pointer">
-                  스포일러 방지 (블러 처리)
-                </label>
-              </div>
-              <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm font-medium text-slate-700">게시글 미리보기</p>
-                <div
-                  className="mt-3 min-h-[120px] rounded-3xl p-5 text-slate-900"
-                  style={{ backgroundColor: bgColor }}
-                >
-                  {content || '여기에 작성 내용이 표시됩니다.'}
+
+              {/* 사이드바: 설정 및 제출 */}
+              <div className="flex flex-col gap-4">
+                {/* 텍스트 미리보기 */}
+                {type === 'text' && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-4">
+                    <p className="mb-2 text-xs font-medium text-slate-400 uppercase tracking-wide">미리보기</p>
+                    <div
+                      className={
+                        'min-h-[80px] rounded-xl p-4 text-sm text-slate-800 ' +
+                        (fontStyle === 'handwriting' ? 'font-handwriting' : 'font-gothic')
+                      }
+                      style={{ backgroundColor: bgColor }}
+                    >
+                      {content || <span className="text-slate-400">작성 내용이 표시됩니다.</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* 삭제 비밀번호 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">삭제 비밀번호</label>
+                  <input
+                    type="password"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="4자리 이상 입력"
+                  />
                 </div>
+
+                {/* 블러 처리 */}
+                <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:bg-slate-100">
+                  <input
+                    type="checkbox"
+                    id="blur-toggle"
+                    className="h-4 w-4 rounded border-slate-300 cursor-pointer"
+                    checked={isBlur}
+                    onChange={(event) => setIsBlur(event.target.checked)}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">스포일러 방지</p>
+                    <p className="text-xs text-slate-500">클릭 전까지 블러 처리됩니다.</p>
+                  </div>
+                </label>
+
+                {/* 제출 버튼 */}
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="mt-auto inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {submitting ? '등록 중...' : '게시글 등록 →'}
+                </button>
+                {infoMessage && (
+                  <p className={
+                    'text-sm text-center ' +
+                    (infoMessage.includes('등록') ? 'text-emerald-600' : 'text-red-500')
+                  }>
+                    {infoMessage}
+                  </p>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="inline-flex w-full items-center justify-center rounded-3xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-              >
-                {submitting ? '작성 중...' : '게시글 등록'}
-              </button>
-              {infoMessage && <p className="text-sm text-slate-600">{infoMessage}</p>}
             </div>
           </div>
         </section>
