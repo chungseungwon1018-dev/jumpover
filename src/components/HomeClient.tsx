@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import useSWR from 'swr'
-import CanvasDraw from 'react-canvas-draw'
+import { Stage, Layer, Line } from 'react-konva'
 import Masonry from 'react-masonry-css'
 import { supabase } from '@/lib/supabase'
 
@@ -110,6 +110,41 @@ export default function HomeClient() {
   const [infoMessage, setInfoMessage] = useState('')
   const [posts, setPosts] = useState<any[]>([])
   const canvasRef = useRef<any>(null)
+  const [lines, setLines] = useState<any[]>([])
+  const [isDrawing, setIsDrawing] = useState(false)
+
+  const handleMouseDown = (e: any) => {
+    setIsDrawing(true)
+    const pos = e.target.getStage().getPointerPosition()
+    setLines([...lines, { tool: 'pen', points: [pos.x, pos.y], color: brushColor, width: brushRadius }])
+  }
+
+  const handleMouseMove = (e: any) => {
+    if (!isDrawing) return
+    const stage = e.target.getStage()
+    const point = stage.getPointerPosition()
+    let lastLine = lines[lines.length - 1]
+    lastLine.points = lastLine.points.concat([point.x, point.y])
+    lines.splice(lines.length - 1, 1, lastLine)
+    setLines(lines.concat())
+  }
+
+  const handleMouseUp = () => {
+    setIsDrawing(false)
+  }
+
+  const getDataURL = () => {
+    if (!canvasRef.current) return null
+    return canvasRef.current.toDataURL()
+  }
+
+  const clearCanvas = () => {
+    setLines([])
+  }
+
+  const undoLine = () => {
+    setLines(lines.slice(0, -1))
+  }
   const [commentsByPost, setCommentsByPost] = useState<Record<string, any[]>>({})
   const [reactionsByPost, setReactionsByPost] = useState<Record<string, any[]>>({})
   const [commentInput, setCommentInput] = useState<Record<string, string>>({})
@@ -417,7 +452,7 @@ export default function HomeClient() {
 
     try {
       if (type === 'image') {
-        const dataUrl = canvasRef.current.getDataURL('image/png', false, '#ffffff')
+        const dataUrl = getDataURL()
         if (!dataUrl) {
           throw new Error('그림을 이미지로 변환하지 못했습니다.')
         }
@@ -916,16 +951,29 @@ export default function HomeClient() {
                         지우기
                       </button>
                     </div>
-                    <CanvasDraw
-                      ref={canvasRef}
-                      brushColor={brushColor}
-                      brushRadius={brushRadius}
-                      lazyRadius={0}
-                      canvasWidth={canvasWidth}
-                      canvasHeight={320}
-                      hideGrid
-                      hideInterface
-                    />
+                    <Stage
+  width={canvasWidth}
+  height={320}
+  ref={canvasRef}
+  style={{ background: bgColor }}
+  onMouseDown={handleMouseDown}
+  onMousemove={handleMouseMove}
+  onMouseup={handleMouseUp}
+>
+  <Layer>
+    {lines.map((line, i) => (
+      <Line
+        key={i}
+        points={line.points}
+        stroke={line.color}
+        strokeWidth={line.width}
+        tension={0.5}
+        lineCap="round"
+        globalCompositeOperation={line.tool === 'eraser' ? 'destination-out' : 'source-over'}
+      />
+    ))}
+  </Layer>
+</Stage>
                     <p className="mt-3 text-sm text-slate-500">그림을 그린 뒤 게시글을 등록하면 캔버피 이미지가 저장됩니다.</p>
                   </div>
                 </>
