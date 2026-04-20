@@ -141,10 +141,34 @@ export default function HomeClient() {
 
   const clearCanvas = () => {
     setLines([])
+    if (canvasRef.current) {
+      const stage = canvasRef.current;
+      const layer = stage.children[0];
+      layer.destroyChildren();
+      layer.draw();
+    }
   }
 
   const undoLine = () => {
-    setLines(lines.slice(0, -1))
+    if (lines.length === 0) return;
+    setLines(lines.slice(0, -1));
+    if (canvasRef.current) {
+      const stage = canvasRef.current;
+      const layer = stage.children[0];
+      layer.destroyChildren();
+      lines.slice(0, -1).forEach(line => {
+        const newLine = new window.Konva.Line({
+          points: line.points,
+          stroke: line.color,
+          strokeWidth: line.width,
+          tension: 0.5,
+          lineCap: 'round',
+          globalCompositeOperation: line.tool === 'eraser' ? 'destination-out' : 'source-over',
+        });
+        layer.add(newLine);
+      });
+      layer.draw();
+    }
   }
   const [commentsByPost, setCommentsByPost] = useState<Record<string, any[]>>({})
   const [reactionsByPost, setReactionsByPost] = useState<Record<string, any[]>>({})
@@ -458,7 +482,7 @@ export default function HomeClient() {
         const originalBg = stage.toDataURL();
         // 임시 배경색 레이어 추가
         const layer = stage.children[0];
-        const Konva = require('konva');
+        import Konva from 'konva';
         const bgRect = new Konva.Rect({
           x: 0, y: 0, width: canvasWidth, height: 320, fill: bgColor, listening: false
         });
