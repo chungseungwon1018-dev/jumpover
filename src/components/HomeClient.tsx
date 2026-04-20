@@ -464,11 +464,11 @@ export default function HomeClient() {
           x: 0, y: 0, width: canvasWidth, height: 320, fill: bgColor, listening: false
         });
         layer.add(bgRect);
-        layer.moveToBottom();
+        bgRect.moveToBottom();
         const dataUrl = stage.toDataURL();
         bgRect.destroy();
         // 원래대로 복구
-        layer.draw();
+        layer.batchDraw();
         if (!dataUrl) {
           throw new Error('그림을 이미지로 변환하지 못했습니다.')
         }
@@ -955,14 +955,14 @@ export default function HomeClient() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => canvasRef.current?.undo()}
+                        onClick={undoLine}
                         className="rounded-2xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
                       >
                         실행 취소
                       </button>
                       <button
                         type="button"
-                        onClick={() => canvasRef.current?.clear()}
+                        onClick={clearCanvas}
                         className="rounded-2xl border border-red-300 bg-white px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
                       >
                         지우기
