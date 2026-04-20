@@ -158,7 +158,7 @@ export default function HomeClient() {
       const layer = stage.children[0];
       layer.destroyChildren();
       lines.slice(0, -1).forEach(line => {
-        const newLine = new window.Konva.Line({
+        const newLine = new Konva.Line({
           points: line.points,
           stroke: line.color,
           strokeWidth: line.width,
@@ -483,7 +483,6 @@ export default function HomeClient() {
         const originalBg = stage.toDataURL();
         // 임시 배경색 레이어 추가
         const layer = stage.children[0];
-        import Konva from 'konva';
         const bgRect = new Konva.Rect({
           x: 0, y: 0, width: canvasWidth, height: 320, fill: bgColor, listening: false
         });
