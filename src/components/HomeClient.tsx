@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Konva from 'konva'
 import { motion } from 'framer-motion'
 import useSWR from 'swr'
 import { Stage, Layer, Line } from 'react-konva'
