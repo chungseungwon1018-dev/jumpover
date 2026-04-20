@@ -978,6 +978,7 @@ export default function HomeClient() {
   onMouseup={handleMouseUp}
 >
   <Layer>
+    {/* 배경색은 style로만 적용, 실제 저장 시에만 bgRect 추가 */}
     {lines.map((line, i) => (
       <Line
         key={i}
