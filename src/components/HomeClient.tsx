@@ -543,7 +543,7 @@ export default function HomeClient() {
       //   ...prev,
       //   [postId]: [...(prev[postId] || []), result.comment],
       // }))
-      mutate() // SWR 데이터 갱신만 수행
+      // mutate() 제거: 실시간 구독(INSERT)이 댓글을 추가하므로 중복 방지
       setCommentInput((prev) => ({ ...prev, [postId]: '' }))
       setCommentPassword((prev) => ({ ...prev, [postId]: '' }))
       setCommentInfo((prev) => ({ ...prev, [postId]: '댓글이 등록되었습니다.' }))
