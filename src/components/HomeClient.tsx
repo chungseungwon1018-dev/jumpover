@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 const BACKGROUND_COLORS = [
+  { value: '#FFFFFF', label: '흰색' },
   { value: '#FEF3C7', label: '크림' },
   { value: '#D1FAE5', label: '민트' },
   { value: '#E0E7FF', label: '라벤더' },
@@ -452,7 +453,20 @@ export default function HomeClient() {
 
     try {
       if (type === 'image') {
-        const dataUrl = getDataURL()
+        // 그림을 이미지로 저장할 때만 배경색 적용
+        const stage = canvasRef.current;
+        const originalBg = stage.toDataURL();
+        // 임시 배경색 레이어 추가
+        const layer = stage.children[0];
+        const bgRect = new window.Konva.Rect({
+          x: 0, y: 0, width: canvasWidth, height: 320, fill: bgColor, listening: false
+        });
+        layer.add(bgRect);
+        layer.moveToBottom();
+        const dataUrl = stage.toDataURL();
+        bgRect.destroy();
+        // 원래대로 복구
+        layer.draw();
         if (!dataUrl) {
           throw new Error('그림을 이미지로 변환하지 못했습니다.')
         }
@@ -483,8 +497,8 @@ export default function HomeClient() {
         throw new Error(result.error || '게시글 작성에 실패했습니다.')
       }
 
-      if (type === 'image' && canvasRef.current) {
-        canvasRef.current.clear()
+      if (type === 'image') {
+        clearCanvas()
       }
       setContent('')
       setPassword('')
@@ -523,10 +537,11 @@ export default function HomeClient() {
         throw new Error(result.error || '댓글 작성에 실패했습니다.')
       }
 
-      setCommentsByPost((prev) => ({
-        ...prev,
-        [postId]: [...(prev[postId] || []), result.comment],
-      }))
+      // setCommentsByPost((prev) => ({
+      //   ...prev,
+      //   [postId]: [...(prev[postId] || []), result.comment],
+      // }))
+      mutate() // SWR 데이터 갱신만 수행
       setCommentInput((prev) => ({ ...prev, [postId]: '' }))
       setCommentPassword((prev) => ({ ...prev, [postId]: '' }))
       setCommentInfo((prev) => ({ ...prev, [postId]: '댓글이 등록되었습니다.' }))
